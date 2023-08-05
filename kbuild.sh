@@ -6,28 +6,28 @@
 #
 
 export DEVICE="VINCE"
-export TC_PATH="$HOME/clang"
+export TC_PATH="$HOME/proton"
 export ZIP_DIR="$(pwd)/AnyKernel3"
+export KSU_DIR="$(pwd)/KernelSU"
 export KERNEL_DIR=$(pwd)
 export KBUILD_BUILD_VERSION="1"
-export KBUILD_BUILD_USER="Unitrix-Kernel"
-export KBUILD_BUILD_HOST="Cosmic-Horizon"
-export KBUILD_BUILD_TIMESTAMP="$(TZ='Asia/Kolkata' date)"
+export KBUILD_BUILD_USER="r"
+export KBUILD_BUILD_HOST="r"
+export KBUILD_BUILD_TIMESTAMP="$(TZ='Asia/Jakarta' date)"
 export PLATFORM_VERSION="13"
 export BUILD_ID="TQ3A.230705.001"
+FINAL_KERNEL_ZIP=Unitrix-Kernel-vince-$(date '+%Y%m%d').zip
 
 # Ask Telegram Channel/Chat ID
 if [[ -z ${CHANNEL_ID} ]]; then
-    echo -n "Plox,Give Me Your TG Channel/Group ID:"
-    read -r tg_channel_id
-    CHANNEL_ID="${tg_channel_id}"
+    echo -n "CHANNEL ID IS ${TG_CH}"
+    CHANNEL_ID="${TG_CH}"
 fi
 
 # Ask Telegram Bot API Token
 if [[ -z ${TELEGRAM_TOKEN} ]]; then
-    echo -n "Plox,Give Me Your TG Bot API Token:"
-    read -r tg_token
-    TELEGRAM_TOKEN="${tg_token}"
+    echo -n "CHANNEL API IS: ${TG_API}"
+    TELEGRAM_TOKEN="${TG_API}"
 fi
 
 if [[ -z ${UNITRIX_CHANNEL_ID} ]]; then
@@ -74,9 +74,13 @@ function error_sticker() {
 }
 function clone_tc() {
 [ -d ${TC_PATH} ] || mkdir ${TC_PATH}
-git clone --depth=1 https://gitlab.com/GhostMaster69-dev/cosmic-clang.git ${TC_PATH}
+git clone --depth=1 https://github.com/kdrag0n/proton-clang.git ${TC_PATH}
 PATH="${TC_PATH}/bin:$PATH"
 export COMPILER=$(${TC_PATH}/bin/clang -v 2>&1 | grep ' version ' | sed 's/([^)]*)[[:space:]]//' | sed 's/([^)]*)//')
+}
+
+function clone_ksu() {
+curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
 }
 
 function clone_anykernel3() {
@@ -98,8 +102,10 @@ DIFF=$(($BUILD_END - $BUILD_START))
 function make_flashable() {
 
 cd $ZIP_DIR
-make clean &>/dev/null
 cp $KERN_IMG $ZIP_DIR
+ls $ZIP_DIR
+zip -r9 "../$FINAL_KERNEL_ZIP" * -x README $FINAL_KERNEL_ZIP
+curl -T "../$FINAL_KERNEL_ZIP" https://pixeldrain.com/api/file/
 if [ "$BRANCH" == "test" ]; then
 	make test &>/dev/null
 elif [ "$BRANCH" == "beta" ]; then
@@ -107,7 +113,7 @@ elif [ "$BRANCH" == "beta" ]; then
 else
 	make stable &>/dev/null
 fi
-ZIP=$(echo *.zip)
+ZIP="../$FINAL_KERNEL_ZIP"
 tg_pushzip
 
 }
@@ -148,6 +154,7 @@ function tg_push_logs() {
 
 # Start cloning toolchain
 clone_tc
+clone_ksu
 
 COMMIT=$(git log --pretty=format:'"%h : %s"' -1)
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
