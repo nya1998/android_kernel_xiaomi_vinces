@@ -3,6 +3,7 @@
 #
 # Copyright (C) 2020 StarLight5234
 # Copyright (C) 2021-22 GhostMaster69-dev
+# Copyright (C) 2023 nya1998
 #
 
 export DEVICE="VINCE"
